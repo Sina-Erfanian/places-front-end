@@ -24,7 +24,10 @@ const PlaceItem = (props) => {
   const confirmDeleteHandler = async () => {
     cancelDeleteHandler();
     try {
-      await sendRequest(`http://localhost/api/places/${props.id}`, "DELETE");
+      await sendRequest(
+        `http://localhost:5000/api/places/${props.id}`,
+        "DELETE"
+      );
       props.onDelete(props.id);
     } catch (err) {
       console.log(err);

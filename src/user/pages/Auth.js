@@ -5,6 +5,7 @@ import Input from "../../shared/components/FormElements/Input";
 import Card from "../../shared/components/UIElements/Card";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import { useHttpClient } from "../../shared/hooks/http-hook";
 import "./Auth.css";
 import {
   VALIDATOR_EMAIL,
@@ -16,8 +17,8 @@ import { AuthContext } from "../../shared/context/auth-context";
 const Auth = () => {
   const { login } = useContext(AuthContext);
   const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState();
+
+  const { isLoading, error, sendRequest, clearError } = useHttpClient();
   const [formState, inputHandler, setFormData] = useForm(
     {
       email: {
@@ -34,56 +35,39 @@ const Auth = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
 
     if (isLogin) {
       try {
-        const response = await fetch("http://localhost:5000/api/users/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        const responseData = await sendRequest(
+          "http://localhost:5000/api/users/login",
+          "POST",
+          JSON.stringify({
             email: formState.inputs.email.value,
             password: formState.inputs.password.value,
           }),
-        });
-
-        const responseData = await response.json();
-        if (!response.ok) {
-          // if we have 4xx or 5xx status code throw new error
-          throw new Error(responseData.message);
-        }
-        setIsLoading(false);
-        login();
+          { "Content-Type": "application/json" }
+        );
+        login(responseData.user.id);
       } catch (err) {
-        setIsLoading(false);
-        setError(err.message || "Something went wrong, please try again.");
+        console.log(err);
       }
     } else {
       try {
-        const response = await fetch("http://localhost:5000/api/users/signup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        const responseData = await sendRequest(
+          "http://localhost:5000/api/users/signup",
+          "POST",
+          JSON.stringify({
             name: formState.inputs.name.value,
             email: formState.inputs.email.value,
             password: formState.inputs.password.value,
           }),
-        });
-
-        const responseData = await response.json();
-        if (!response.ok) {
-          // if we have 4xx or 5xx status code throw new error
-          throw new Error(responseData.message);
-        }
-        setIsLoading(false);
-        login();
+          {
+            "Content-Type": "application/json",
+          }
+        );
+        login(responseData.user.id);
       } catch (err) {
-        setIsLoading(false);
-        setError(err.message || "Something went wrong, please try again.");
+        console.log(err);
       }
     }
   };
@@ -112,13 +96,9 @@ const Auth = () => {
     setIsLogin((prev) => !prev);
   };
 
-  const errorHandler = () => {
-    setError(null);
-  };
-
   return (
     <React.Fragment>
-      <ErrorModal error={error} onClear={errorHandler} />
+      <ErrorModal error={error} onClear={clearError} />
       <Card className="authentication">
         {isLoading && <LoadingSpinner asOverlay />}
         <h2>{isLogin ? "Login" : "Signup"} Required</h2>
@@ -149,8 +129,8 @@ const Auth = () => {
             element="input"
             type="password"
             label="Password"
-            validators={[VALIDATOR_MINLENGTH(5)]}
-            errorText="Please enter a valid password, at least 5 characters"
+            validators={[VALIDATOR_MINLENGTH(6)]}
+            errorText="Please enter a valid password, at least 6 characters"
             onInput={inputHandler}
           />
           <Button type="submit" disabled={!formState.isValid}>

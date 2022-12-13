@@ -12,6 +12,7 @@ import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import Button from "../../shared/components/FormElements/Button";
 import { useForm } from "../../shared/hooks/form-hook";
 import { AuthContext } from "../../shared/context/auth-context";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 
 const NewPlace = () => {
   const { userId } = useContext(AuthContext);
@@ -30,6 +31,10 @@ const NewPlace = () => {
         value: "",
         isValid: false,
       },
+      image: {
+        value: null,
+        isValid: false,
+      },
     },
     false
   );
@@ -38,17 +43,13 @@ const NewPlace = () => {
   const placeSubmitHandler = async (e) => {
     e.preventDefault();
     try {
-      await sendRequest(
-        "http://localhost:5000/api/places",
-        "POST",
-        JSON.stringify({
-          title: formState.inputs.title.value,
-          description: formState.inputs.description.value,
-          address: formState.inputs.address.value,
-          creator: userId,
-        }),
-        { "Content-Type": "application/json" }
-      );
+      const formData = new FormData();
+      formData.append("title", formState.inputs.title.value);
+      formData.append("description", formState.inputs.description.value);
+      formData.append("address", formState.inputs.address.value);
+      formData.append("creator", userId);
+      formData.append("image", formState.inputs.image.value);
+      await sendRequest("http://localhost:5000/api/places", "POST", formData);
       navigate("/");
     } catch (err) {
       console.log(err);
@@ -84,6 +85,11 @@ const NewPlace = () => {
           validators={[VALIDATOR_MINLENGTH(5)]}
           errorText="Please enter a valid description (at least 5 characters)."
           onInput={inputHandler}
+        />
+        <ImageUpload
+          id="image"
+          onInput={inputHandler}
+          errorText="Please provide an image."
         />
 
         <Button type="submit" disabled={!formState.isValid}>

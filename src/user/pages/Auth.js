@@ -6,6 +6,7 @@ import Card from "../../shared/components/UIElements/Card";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import { useHttpClient } from "../../shared/hooks/http-hook";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 import "./Auth.css";
 import {
   VALIDATOR_EMAIL,
@@ -35,7 +36,7 @@ const Auth = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-
+    console.log(formState.inputs);
     if (isLogin) {
       try {
         const responseData = await sendRequest(
@@ -53,17 +54,15 @@ const Auth = () => {
       }
     } else {
       try {
+        const formData = new FormData();
+        formData.append("email", formState.inputs.email.value);
+        formData.append("name", formState.inputs.name.value);
+        formData.append("password", formState.inputs.password.value);
+        formData.append("image", formState.inputs.image.value);
         const responseData = await sendRequest(
           "http://localhost:5000/api/users/signup",
           "POST",
-          JSON.stringify({
-            name: formState.inputs.name.value,
-            email: formState.inputs.email.value,
-            password: formState.inputs.password.value,
-          }),
-          {
-            "Content-Type": "application/json",
-          }
+          formData
         );
         login(responseData.user.id);
       } catch (err) {
@@ -78,6 +77,7 @@ const Auth = () => {
         {
           ...formState.inputs,
           name: undefined,
+          image: undefined,
         },
         formState.inputs.email.isValid && formState.inputs.password.isValid
       );
@@ -87,6 +87,10 @@ const Auth = () => {
           ...formState.inputs,
           name: {
             value: "",
+            isValid: false,
+          },
+          image: {
+            value: null,
             isValid: false,
           },
         },
@@ -113,6 +117,14 @@ const Auth = () => {
               validators={[VALIDATOR_REQUIRE()]}
               errorText="Please enter a name."
               onInput={inputHandler}
+            />
+          )}
+          {!isLogin && (
+            <ImageUpload
+              id="image"
+              center
+              onInput={inputHandler}
+              errorText="Please provide an image."
             />
           )}
           <Input

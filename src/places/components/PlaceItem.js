@@ -10,7 +10,7 @@ import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 
 const PlaceItem = (props) => {
   const { isLoading, error, sendRequest, clearError } = useHttpClient();
-  const { isLoggedIn, userId } = useContext(AuthContext);
+  const { isLoggedIn, userId, token } = useContext(AuthContext);
   const { id, image, title, address, description, creatorId, coordinates } =
     props;
 
@@ -26,7 +26,9 @@ const PlaceItem = (props) => {
     try {
       await sendRequest(
         `http://localhost:5000/api/places/${props.id}`,
-        "DELETE"
+        "DELETE",
+        null,
+        { Authorization: "Bearer " + token }
       );
       props.onDelete(props.id);
     } catch (err) {

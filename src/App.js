@@ -11,23 +11,13 @@ import MainNavigation from "./shared/components/Navigation/MainNavigation";
 import UpdatePlace from "./places/pages/UpdatePlace";
 import Auth from "./user/pages/Auth";
 import { AuthContext } from "./shared/context/auth-context";
-import React, { useCallback, useState } from "react";
+import { useAuth } from "./shared/hooks/auth-hook";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userId, setUserId] = useState(null);
-  const login = useCallback((uid) => {
-    setIsLoggedIn(true);
-    setUserId(uid);
-  }, []);
-  const logout = useCallback(() => {
-    setIsLoggedIn(false);
-    setUserId(null);
-  }, []);
-
+  const { token, login, logout, userId } = useAuth();
   let routes;
 
-  if (isLoggedIn) {
+  if (token) {
     routes = (
       <Routes>
         <Route path="/" element={<Users />} />
@@ -49,7 +39,9 @@ function App() {
   }
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout, userId }}>
+    <AuthContext.Provider
+      value={{ isLoggedIn: !!token, token, login, logout, userId }}
+    >
       <Router>
         <MainNavigation />
         <main>{routes}</main>
